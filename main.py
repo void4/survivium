@@ -172,7 +172,9 @@ while running:
 		screen.blit(surf, [bx, by])
 		battleshells = list(battle.shells.values())
 
-		text(screen, bx, by, f"{battleshells[0].owner} vs {battleshells[1].owner}")
+		dx = text(screen, bx, by, f"{battleshells[0].owner}", battleshells[0].color)
+		dx += text(screen, bx+dx, by, " vs ")
+		text(screen, bx+dx, by, f"{battleshells[1].owner}", battleshells[1].color)
 
 
 

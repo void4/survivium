@@ -161,6 +161,8 @@ class Battle:
 
         pygame.draw.rect(surf, (200,200,200), pygame.Rect(0, (self.h+1)*self.scale, self.w*self.scale*self.ticks/self.maxsteps, self.scale))
 
+        pygame.draw.rect(surf, (255,255,255), pygame.Rect(0, 0, self.w*self.scale, self.h*self.scale), 1)
+
         area = self.w*self.h
 
         # Assume two players for now
