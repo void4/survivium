@@ -10,7 +10,7 @@ SIZE = 64
 SCALE = 4
 
 w = int(SIZE*SCALE*4)
-h = w
+h = int((SIZE+3)*SCALE*3)
 
 screen = pygame.display.set_mode((w,h))
 
@@ -24,7 +24,7 @@ BLUE = (0,0,255)
 
 shells = []
 
-for p in range(10):
+for p in range(64):
 	color = tuple([randint(0,255) for i in range(3)])
 	shell = Shell(f"Player{p}", color, [randint(0,NUM_INSTR-1) for i in range(50)])
 	shells.append(shell)
@@ -65,7 +65,7 @@ while running:
 		init_battles()
 
 	for s, shell in enumerate(sorted(shells, key=lambda shell:rating(shell.rating), reverse=True)):
-		text(screen, battlew, 12*s, f"{s}. {rating(shell.rating)} {shell.owner}", color=shell.color)
+		text(screen, battlew, 12*s, f"{s+1}. {rating(shell.rating)} {shell.owner}", color=shell.color)
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
