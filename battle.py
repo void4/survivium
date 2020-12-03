@@ -16,11 +16,10 @@ directions = [(0,1), (1,0), (0,-1), (-1,0)]
 NUM_INSTR = 7
 
 I_STEP, I_WAIT, I_LEFT, I_RIGHT, I_EAT, I_HOP, I_CLONE = range(NUM_INSTR)
+ICOST = [1,1,1,1,2,2,5]
 
-class Player:
-    def __init__(self, color, shell):
-        self.color = color
-        self.shell = shell
+INAMES = "swlrehc"
+
 
 class Shell:
     def __init__(self, owner, color, code):
@@ -28,6 +27,9 @@ class Shell:
         self.color = color
         self.code = code
         self.rating = Rating()
+
+    def codestr(self):
+        return "".join(INAMES[c] for c in self.code)
 
     def instantiate(self):
         return Virus(self.color, self.code)
@@ -37,6 +39,7 @@ class Virus:
         self.color = color
         self.code = code
         self.ip = 0
+        self.wait = 0
         self.orientation = 0
 
 class Battle:
@@ -80,6 +83,10 @@ class Battle:
             if not isinstance(active, Virus):
                 continue
 
+            active.wait = max(0, active.wait-1)
+            if active.wait > 0:
+                continue
+
             instr = active.code[active.ip%len(active.code)]
 
             if instr == I_STEP:
@@ -119,6 +126,7 @@ class Battle:
                 new = Virus(active.color, active.code)
                 self.world[ny][nx] = new
 
+            active.wait += ICOST[instr]
             active.ip += 1
 
         self.ticks += 1
@@ -127,7 +135,10 @@ class Battle:
             fields = sorted([item for item in self.counter.items() if item[0] is not None], key=lambda kv:kv[1], reverse=True)
             if len(fields) > 0:
                 winner = self.shells[fields[0][0]]
-                loser = self.shells[fields[1][0]]
+                if len(fields) > 1:
+                    loser = self.shells[fields[1][0]]
+                else:
+                    loser = self.shells[[key for key in self.shells if key != fields[0][0]][0]]
                 winner.rating, loser.rating = rate_1vs1(winner.rating, loser.rating)
                 self.over = True
 
