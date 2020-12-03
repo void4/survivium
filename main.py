@@ -24,8 +24,8 @@ battle = None
 def init_battle():
 	global battle
 
-	v1 = Virus(RED, [randint(0,NUM_INSTR-1) for i in range(10)])
-	v2 = Virus(BLUE, [randint(0,NUM_INSTR-1) for i in range(10)])
+	v1 = Shell(RED, [randint(0,NUM_INSTR-1) for i in range(50)])
+	v2 = Shell(BLUE, [randint(0,NUM_INSTR-1) for i in range(10)])
 
 	battle = Battle(2, SIZE, [((16,16), v1), ((SIZE-16,SIZE-16), v2)])
 

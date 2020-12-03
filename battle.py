@@ -2,6 +2,7 @@ import pygame
 from random import shuffle
 from itertools import product
 from collections import Counter
+from trueskill import Rating, rate_1vs1
 
 font = pygame.font.SysFont('Mono', 14)
 
@@ -20,6 +21,19 @@ NUM_INSTR = 7
 
 I_STEP, I_WAIT, I_LEFT, I_RIGHT, I_EAT, I_HOP, I_CLONE = range(NUM_INSTR)
 
+class Owner:
+    def __init__(self):
+        pass
+
+class Shell:
+    def __init__(self, color, code):
+        self.color = color
+        self.code = code
+        self.rating = Rating()
+
+    def instantiate(self):
+        return Virus(self.color, self.code)
+
 class Virus:
     def __init__(self, color, code):
         self.color = color
@@ -29,12 +43,16 @@ class Virus:
 
 class Battle:
     def __init__(self, scale, size, starters):
+        self.ticks = 0
+        self.counter = None
         self.scale = scale
         self.w = self.h = size
         self.coords = list(product(range(self.w), range(self.h)))
         self.world = [[None for x in range(self.w)] for y in range(self.h)]
+        self.shells = {}
         for starter in starters:
-            self.world[starter[0][1]][starter[0][0]] = starter[1]
+            self.shells[starter[1].color] = starter[1]
+            self.world[starter[0][1]][starter[0][0]] = starter[1].instantiate()
 
     def bound(self, x, y):
         return x%self.w, y%self.h
@@ -101,9 +119,19 @@ class Battle:
 
             active.ip += 1
 
+        self.ticks += 1
+
+        if self.ticks % 100 == 0 and self.counter is not None:
+            fields = sorted([item for item in self.counter.items() if item[0] is not None], key=lambda kv:kv[1], reverse=True)
+            if len(fields) > 0:
+                winner = self.shells[fields[0][0]]
+                loser = self.shells[fields[1][0]]
+                winner.rating, loser.rating = rate_1vs1(winner.rating, loser.rating)
+                print("WINNER", winner.rating)
+
 
     def draw(self, surf):
-        self.counter = Counter()
+        self.counter = Counter({shellcolor: 0 for shellcolor in self.shells.keys()})
         for x,y in self.coords:
             tile = self.world[y][x]
             if tile is None:
