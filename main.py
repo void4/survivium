@@ -57,7 +57,7 @@ def new_shell(owner=None, color=None, code=None):
 battles = []
 
 def init_battles():
-	global battles, GW, SIZE, SCALE, BATTLES, battlew
+	global battles, GW, SIZE, SCALE, BATTLES, battlew, TEXTSIZE
 
 	battles = []
 
@@ -69,21 +69,27 @@ def init_battles():
 		SIZE = 45
 		SCALE = 20
 		BATTLES = 1
+		TEXTSIZE = 30
 	elif len(shells) < 10:
 		GW = 1
 		SIZE = 45
 		SCALE = 10
 		BATTLES = 2
+		TEXTSIZE = 24
 	elif len(shells) < 20:
 		GW = 2
 		SIZE = 45
 		SCALE = 10
 		BATTLES = 4
+		TEXTSIZE = 20
 	else:
 		GW = 3
 		SIZE = 40
 		SCALE = 8
 		BATTLES = 9
+		TEXTSIZE = 16
+
+	reloadFont(TEXTSIZE)
 
 	battlew = SIZE*SCALE*GW
 

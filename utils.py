@@ -5,6 +5,11 @@ TEXTSIZE = 16
 
 font = pygame.font.SysFont('Mono', TEXTSIZE)
 
+def reloadFont(TEXTSIZE):
+    global font
+    font = pygame.font.SysFont('Mono', TEXTSIZE)
+
+
 def text(surf, x, y, t, color=(255, 255, 255)):
     textsurface = font.render(t, False, color)
     surf.blit(textsurface, (x, y))
