@@ -1,11 +1,19 @@
 import pygame
 import colorsys
 
-font = pygame.font.SysFont('Mono', 12)
+TEXTSIZE = 16
+
+font = pygame.font.SysFont('Mono', TEXTSIZE)
 
 def text(surf, x, y, t, color=(255, 255, 255)):
     textsurface = font.render(t, False, color)
     surf.blit(textsurface, (x, y))
+    return textsurface.get_size()[0]
+
+def textcenter(surf, x, y, w, t, color=(255,255,255)):
+    textsurface = font.render(t, False, color)
+    tw = textsurface.get_size()[0]
+    surf.blit(textsurface, (x+(w-tw)//2, y))
     return textsurface.get_size()[0]
 
 def rating(r):

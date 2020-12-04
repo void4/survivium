@@ -9,8 +9,8 @@ pygame.init()
 from utils import *
 pygame.display.set_caption("codewars")
 
-SIZE = 52
-SCALE = 5
+SIZE = 45
+SCALE = 7
 
 w = 1920#int(SIZE*SCALE*5)
 h = 1080#int((SIZE+3)*SCALE*4)
@@ -48,6 +48,8 @@ def new_shell(owner=None, color=None, code=None):
 	shell = Shell(owner, color, code)
 	return shell
 
+
+
 #for p in range(64):
 #	shells.append(new_shell())
 
@@ -80,8 +82,8 @@ def splice(a,b):
 	code = []
 	p = random()
 	c = 0
-	for i in range(len(a.code)):
-		if c == 0:
+	for i in range(max(len(a.code), len(b.code))):
+		if c == 0 and i < len(a.code) or i >= len(b.code):
 			code.append(a.code[i])
 		else:
 			code.append(b.code[i])
@@ -109,7 +111,25 @@ def codify(text):
 			code.append(INAMES.index(c))
 	return code
 
-i = 0
+def createOrChange(owner, code):
+	pshells = [shell for shell in shells if shell.owner==owner]
+	if len(pshells) > 0:
+		pshells[0].code = code
+		print("Changed code", owner, code)
+	else:
+		print("New player", owner, code)
+		shells.append(new_shell(owner=owner, code=code))
+
+def reload_custom():
+	createOrChange("random", [randint(0,NUM_INSTR-1) for i in range(1,50)])
+	if len(shells) > 0:
+		createOrChange("mutant", mutate(splice(mutate(choice(shells)), mutate(choice(shells)))).code)
+
+#shells.append(new_shell("H", (100, 150, 190), codify("lsclsrcselhc")))
+shells.append(new_shell("playsdwarffortress", (200, 150, 30), codify("srchrehhhrchhh")))
+shells.append(new_shell("str0hhalm", (255, 255, 0), codify("crschc")))
+#shells.append(new_shell("Simple", (255,255,255), codify("r")))
+
 running = True
 battlerounds = 0
 while running:
@@ -119,26 +139,25 @@ while running:
 
 	while messages:
 		message = messages.pop(0)
+		## XXX:
+		#continue
 		#print(message.channel, message.sender, message.text)
 		#print(dir(message))
 		# TODO use user-set color
 		#if "!" not in message.text:
 		#	continue
+		msg = message.text
 
-		code = codify(message.text)
-		if len(code) == 0:
-			continue
+		#if True:
+			#code = codify(msg)
+		if msg.startswith("!code "):
+			code = codify(msg.split(" ", 1)[1])
+			if len(code) == 0:
+				continue
 
-		pshells = [shell for shell in shells if shell.owner==message.sender]
-		if len(pshells) > 0:
-			pshells[0].code = code
-			print("Changed code", message.sender, code)
-		else:
-			print("New player", message.sender, code)
-			shells.append(new_shell(owner=message.sender, code=code))
+			createOrChange(message.sender, code)
 
 	screen.fill(background_color)
-	i += 1
 
 	if time() % 20 < 10:
 		sortedshells = sorted(shells, key=lambda shell:rating(shell.rating), reverse=True)
@@ -158,8 +177,8 @@ while running:
 		bx = (SIZE*SCALE*b)%battlew//(SIZE*SCALE)*(SIZE*SCALE)
 		by = ((SIZE)*SCALE*b)//battlew*((SIZE+3)*SCALE)
 		# only draw in the first few battle iterations?
-		pygame.draw.line(linesurf, battleshells[0].color+(100,), [bx+SIZE*SCALE/2, by+SIZE*SCALE/2], [battlew, 12*s1score+6])
-		pygame.draw.line(linesurf, battleshells[1].color+(100,), [bx+SIZE*SCALE/2, by+SIZE*SCALE/2], [battlew, 12*s2score+6])
+		pygame.draw.line(linesurf, battleshells[0].color+(100,), [bx+SIZE*SCALE//2, by+SIZE*SCALE//2], [battlew, TEXTSIZE*s1score+TEXTSIZE//2])
+		pygame.draw.line(linesurf, battleshells[1].color+(100,), [bx+SIZE*SCALE//2, by+SIZE*SCALE//2], [battlew, TEXTSIZE*s2score+TEXTSIZE//2])
 
 	screen.blit(linesurf, (0,0))
 
@@ -167,29 +186,31 @@ while running:
 		battle.update()
 		surf = pygame.Surface([SIZE*SCALE, (SIZE+3)*SCALE], pygame.SRCALPHA)
 		battle.draw(surf)
-		bx = (SIZE*SCALE*b)%battlew//(SIZE*SCALE)*(SIZE*SCALE)
+		bx = (SIZE*SCALE*b)%battlew//(SIZE*SCALE)*(SIZE*SCALE+10)
 		by = ((SIZE)*SCALE*b)//battlew*((SIZE+3)*SCALE)
 		screen.blit(surf, [bx, by])
 		battleshells = list(battle.shells.values())
 
-		dx = text(screen, bx, by, f"{battleshells[0].owner}", battleshells[0].color)
+		dx = 2
+		dx += text(screen, bx+dx, by, f"{battleshells[0].owner}", battleshells[0].color)
 		dx += text(screen, bx+dx, by, " vs ")
 		text(screen, bx+dx, by, f"{battleshells[1].owner}", battleshells[1].color)
 
 
 
-	if battles and battles[0].over:
+	if battles and battles[0].over and battles[0].ticks > BATTLESCREENTICKS:
 		#XXX
 		#if battlerounds % 1 == 0:
 		#	cull_and_mutate()
+		reload_custom()
 		init_battles()
 		battlerounds += 1
 		# TODO mutate them over time so they begin to lose?
 
 	for s, shell in enumerate(sortedshells):
-		text(screen, battlew, 12*s, f"{s+1}. {rating(shell.rating)} {shell.owner} {shell.codestr()}", color=shell.color)
+		text(screen, battlew+10*GW, TEXTSIZE*s, f"{s+1}. {rating(shell.rating)} {shell.owner} {shell.codestr()}", color=shell.color)
 
-	screen.blit(explanation, [battlew+SIZE*SCALE, 0])
+	screen.blit(explanation, [w-explanation.get_size()[0], 0])#[battlew+SIZE*SCALE, 0])
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:

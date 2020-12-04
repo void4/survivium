@@ -16,10 +16,12 @@ directions = [(0,1), (1,0), (0,-1), (-1,0)]
 NUM_INSTR = 7
 
 I_STEP, I_WAIT, I_LEFT, I_RIGHT, I_EAT, I_HOP, I_CLONE = range(NUM_INSTR)
-ICOST = [1,1,1,1,2,2,5]
+I_PREWAIT = [0,0,0,0,0,2,20]
+I_POSTWAIT = [0,0,0,0,1,0,5]
 
 INAMES = "swlrehc"
 
+BATTLESCREENTICKS = 200
 
 class Shell:
     def __init__(self, owner, color, code):
@@ -39,12 +41,13 @@ class Virus:
         self.color = color
         self.code = code
         self.ip = 0
-        self.wait = 0
+        self.prewait = None
+        self.postwait = None
         self.orientation = 0
 
 class Battle:
     def __init__(self, scale, size, starters):
-        self.maxsteps = 256
+        self.maxsteps = 150
         self.over = False
         self.ticks = 0
         self.counter = None
@@ -83,11 +86,24 @@ class Battle:
             if not isinstance(active, Virus):
                 continue
 
-            active.wait = max(0, active.wait-1)
-            if active.wait > 0:
-                continue
+            if active.postwait is not None:
+                active.postwait = max(0, active.postwait-1)
+
+                if active.postwait > 0:
+                    continue
+
 
             instr = active.code[active.ip%len(active.code)]
+
+            if active.prewait is None:
+                active.prewait = I_PREWAIT[instr] + 1
+
+            active.prewait = max(0, active.prewait-1)
+
+            if active.prewait > 0:
+                continue
+
+            active.prewait = None
 
             if instr == I_STEP:
                 # One step into the looking direction
@@ -126,7 +142,7 @@ class Battle:
                 new = Virus(active.color, active.code)
                 self.world[ny][nx] = new
 
-            active.wait += ICOST[instr]
+            active.postwait = I_POSTWAIT[instr] + 1
             active.ip += 1
 
         self.ticks += 1
@@ -139,7 +155,14 @@ class Battle:
                     loser = self.shells[fields[1][0]]
                 else:
                     loser = self.shells[[key for key in self.shells if key != fields[0][0]][0]]
-                winner.rating, loser.rating = rate_1vs1(winner.rating, loser.rating)
+                wr, lr = rate_1vs1(winner.rating, loser.rating)
+                self.winnerdelta = rating(wr)-rating(winner.rating)
+                self.loserdelta = rating(lr)-rating(loser.rating)
+                winner.rating, loser.rating = wr, lr
+                self.winner = winner
+                self.loser = loser
+                self.ticks = 0
+                self.maxsteps = BATTLESCREENTICKS
                 self.over = True
 
 
@@ -159,8 +182,10 @@ class Battle:
 
         #text(surf, 0, 0, str(self.counter))
 
-        pygame.draw.rect(surf, (200,200,200), pygame.Rect(0, (self.h+1)*self.scale, self.w*self.scale*self.ticks/self.maxsteps, self.scale))
+        # Time indicator
+        pygame.draw.rect(surf, (200,200,200), pygame.Rect(0, (self.h)*self.scale, self.w*self.scale*self.ticks/self.maxsteps, self.scale))
 
+        # White boundary
         pygame.draw.rect(surf, (255,255,255), pygame.Rect(0, 0, self.w*self.scale, self.h*self.scale), 1)
 
         area = self.w*self.h
@@ -175,5 +200,13 @@ class Battle:
         for color in colors:
             perc = self.counter.get(color, 0)/area
             width = perc*self.w*self.scale
-            pygame.draw.rect(surf, getColor(color), pygame.Rect(offset, (self.h+2)*self.scale, width, self.scale))
+            pygame.draw.rect(surf, getColor(color), pygame.Rect(offset, (self.h+1)*self.scale, width, self.scale))
             offset += width
+
+        if self.over:
+            pygame.draw.rect(surf, (255,255,255,20), pygame.Rect(0, 0, self.w*self.scale, self.h*self.scale))
+            textcenter(surf, 0, self.h*self.scale//2-TEXTSIZE*2, self.w*self.scale, f"{self.winner.owner} WINS", self.winner.color)
+            textcenter(surf, 0, self.h*self.scale//2-TEXTSIZE, self.w*self.scale, f"+{self.winnerdelta} points", (0,255,0))
+            textcenter(surf, 0, self.h*self.scale//2+TEXTSIZE, self.w*self.scale, f"{self.loser.owner} loses", self.loser.color)
+            textcenter(surf, 0, self.h*self.scale//2+TEXTSIZE*2, self.w*self.scale, f"{self.loserdelta} points", (255,0,0))
+            self.ticks += 1
