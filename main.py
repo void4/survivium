@@ -66,8 +66,8 @@ def init_battles():
 
 	if len(shells) < 5:
 		GW = 1
-		SIZE = 90
-		SCALE = 10
+		SIZE = 45
+		SCALE = 20
 		BATTLES = 1
 	elif len(shells) < 10:
 		GW = 1
