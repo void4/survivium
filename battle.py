@@ -47,7 +47,7 @@ class Virus:
 
 class Battle:
     def __init__(self, scale, size, starters):
-        self.maxsteps = 150
+        self.maxsteps = 1200
         self.over = False
         self.ticks = 0
         self.counter = None

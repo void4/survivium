@@ -9,13 +9,14 @@ pygame.init()
 from utils import *
 pygame.display.set_caption("codewars")
 
-SIZE = 45
-SCALE = 7
+SIZE = 90
+SCALE = 10
 
 w = 1920#int(SIZE*SCALE*5)
 h = 1080#int((SIZE+3)*SCALE*4)
 
-GW = 3
+GW = 1
+BATTLES = 1
 
 screen = pygame.display.set_mode((w,h))
 
@@ -56,14 +57,37 @@ def new_shell(owner=None, color=None, code=None):
 battles = []
 
 def init_battles():
-	global battles
+	global battles, GW, SIZE, SCALE, BATTLES, battlew
 
 	battles = []
 
 	if len(shells) < 2:
 		return
 
-	for i in range(9):
+	if len(shells) < 5:
+		GW = 1
+		SIZE = 90
+		SCALE = 10
+		BATTLES = 1
+	elif len(shells) < 10:
+		GW = 1
+		SIZE = 45
+		SCALE = 10
+		BATTLES = 2
+	elif len(shells) < 20:
+		GW = 2
+		SIZE = 45
+		SCALE = 10
+		BATTLES = 4
+	else:
+		GW = 3
+		SIZE = 40
+		SCALE = 8
+		BATTLES = 9
+
+	battlew = SIZE*SCALE*GW
+
+	for i in range(BATTLES):#GW**2
 		v1 = choice(shells)
 		v2 = choice([shell for shell in shells if shell!=v1])
 
@@ -208,7 +232,7 @@ while running:
 		# TODO mutate them over time so they begin to lose?
 
 	for s, shell in enumerate(sortedshells):
-		text(screen, battlew+10*GW, TEXTSIZE*s, f"{s+1}. {rating(shell.rating)} {shell.owner} {shell.codestr()}", color=shell.color)
+		text(screen, (SIZE*SCALE+10)*GW, TEXTSIZE*s, f"{s+1}. {rating(shell.rating)} {shell.owner} {shell.codestr()}", color=shell.color)
 
 	screen.blit(explanation, [w-explanation.get_size()[0], 0])#[battlew+SIZE*SCALE, 0])
 
