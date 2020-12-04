@@ -109,8 +109,9 @@ class Battle:
                 # One step into the looking direction
                 nxy = self.step(xy, active, 1)
                 nx, ny = nxy
-                self.world[ny][nx] = active
-                self.world[y][x] = active.color
+                if self.world[ny][nx] is None:
+                    self.world[ny][nx] = active
+                    self.world[y][x] = active.color
 
             elif instr == I_WAIT:
                 # Does nothing
@@ -133,14 +134,16 @@ class Battle:
                 # Jumps two cells, but doesn't color the old one
                 nxy = self.step(xy, active, 2)
                 nx, ny = nxy
-                self.world[ny][nx] = active
-                self.world[y][x] = None
+                if self.world[ny][nx] is None:
+                    self.world[ny][nx] = active
+                    self.world[y][x] = None
 
             elif instr == I_CLONE:
                 #self.actives.append((x, y))
                 nx, ny = self.step(xy, active, 1)
                 new = Virus(active.color, active.code)
-                self.world[ny][nx] = new
+                if self.world[ny][nx] is None:
+                    self.world[ny][nx] = new
 
             active.postwait = I_POSTWAIT[instr] + 1
             active.ip += 1
