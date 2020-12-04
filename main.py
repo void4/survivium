@@ -149,9 +149,11 @@ def reload_custom():
 	if len(shells) > 0:
 		createOrChange("mutant", mutate(splice(mutate(choice(shells)), mutate(choice(shells)))).code)
 
-#shells.append(new_shell("H", (100, 150, 190), codify("lsclsrcselhc")))
+shells.append(new_shell("H", (100, 150, 190), codify("lsclsrcselhc")))
 shells.append(new_shell("playsdwarffortress", (200, 150, 30), codify("srchrehhhrchhh")))
 shells.append(new_shell("str0hhalm", (255, 255, 0), codify("crschc")))
+shells.append(new_shell("painter", (0,255,0), codify("plsrc")))
+shells.append(new_shell("defender", (0,255,0), codify("esddrhcr")))
 #shells.append(new_shell("Simple", (255,255,255), codify("r")))
 
 running = True

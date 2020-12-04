@@ -13,13 +13,13 @@ def getColor(t):
 
 directions = [(0,1), (1,0), (0,-1), (-1,0)]
 
-NUM_INSTR = 7
+NUM_INSTR = 9
 
-I_STEP, I_WAIT, I_LEFT, I_RIGHT, I_EAT, I_HOP, I_CLONE = range(NUM_INSTR)
-I_PREWAIT = [0,0,0,0,0,2,20]
-I_POSTWAIT = [0,0,0,0,1,0,5]
+I_STEP, I_WAIT, I_LEFT, I_RIGHT, I_EAT, I_HOP, I_CLONE, I_PAINT, I_DEFEND = range(NUM_INSTR)
+I_PREWAIT = [0,0,0,0,0,2,20,1,0]
+I_POSTWAIT = [0,0,0,0,1,0,5,0,0]
 
-INAMES = "swlrehc"
+INAMES = "swlrehcpd"
 
 BATTLESCREENTICKS = 200
 
@@ -38,6 +38,7 @@ class Shell:
 
 class Virus:
     def __init__(self, color, code):
+        self.defense = 0
         self.color = color
         self.code = code
         self.ip = 0
@@ -86,6 +87,8 @@ class Battle:
             if not isinstance(active, Virus):
                 continue
 
+            active.defense = max(0, active.defense-1)
+
             if active.postwait is not None:
                 active.postwait = max(0, active.postwait-1)
 
@@ -128,7 +131,12 @@ class Battle:
             elif instr == I_EAT:
                 # Removes all cells one step into the looking direction
                 nx, ny = self.step(xy, active, 1)
-                self.world[ny][nx] = None
+                target = self.world[ny][nx]
+                if isinstance(target, tuple):
+                    self.world[ny][nx] = None
+                elif isinstance(target, Virus):
+                    if target.defense == 0:
+                        self.world[ny][nx] = None
 
             elif instr == I_HOP:
                 # Jumps two cells, but doesn't color the old one
@@ -144,6 +152,16 @@ class Battle:
                 new = Virus(active.color, active.code)
                 if self.world[ny][nx] is None:
                     self.world[ny][nx] = new
+
+            elif instr == I_PAINT:
+                nx, ny = self.step(xy, active, 1)
+                if self.world[ny][nx] is None or isinstance(self.world[ny][nx], tuple):
+                    self.world[ny][nx] = active.color
+                else:
+                    self.world[ny][nx].color = active.color
+
+            elif instr == I_DEFEND:
+                active.defense = 1
 
             active.postwait = I_POSTWAIT[instr] + 1
             active.ip += 1
@@ -177,11 +195,17 @@ class Battle:
                 self.counter[None] += 1
                 continue
             elif isinstance(tile, Virus):
-                color = tile.color
+                self.counter[tile.color] += 1
+                color = list(tile.color)
+                color[0] = min(255, color[0]+20)
+                color[1] = min(255, color[1]+20)
+                color[2] = min(255, color[2]+20)
+                color = tuple(color)
             else:
                 color = tile
+                self.counter[color] += 1
             pygame.draw.rect(surf, color, pygame.Rect(x*self.scale, y*self.scale, self.scale, self.scale))
-            self.counter[color] += 1
+
 
         #text(surf, 0, 0, str(self.counter))
 
